@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,24 @@ const workflowSteps = [
   "Upload a PDF and detect page structure instantly.",
   "Apply edits like images, overlays, annotations, or page operations.",
   "Export the final version with a clean review trail for your team.",
+];
+
+const useCases = [
+  {
+    title: "Sales and proposals",
+    description:
+      "Personalize proposal decks with signatures, logos, and revised pricing pages in minutes.",
+  },
+  {
+    title: "Operations and compliance",
+    description:
+      "Apply stamps, redact sensitive fields, and keep final PDFs consistent across teams.",
+  },
+  {
+    title: "Client delivery",
+    description:
+      "Merge supporting pages, reorder sections, and ship polished deliverables without extra tools.",
+  },
 ];
 
 const stats = [
@@ -280,7 +299,41 @@ export default function Home() {
             </CardContent>
           </Card>
         </section>
+
+        <section className="border-y border-border/60 bg-card/30">
+          <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:px-8">
+            <div className="mb-8 space-y-3">
+              <Badge className="rounded-full bg-muted px-3 py-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">
+                Teams and outcomes
+              </Badge>
+              <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
+                One editor flow for every PDF-heavy team.
+              </h2>
+              <p className="max-w-3xl text-base leading-8 text-muted-foreground">
+                From fast proposal iteration to compliance-ready exports, keep
+                your document operations in one reliable surface.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {useCases.map((item) => (
+                <Card
+                  key={item.title}
+                  className="border-border/60 bg-background/80 shadow-[0_20px_80px_-56px_rgba(0,0,0,0.9)]"
+                >
+                  <CardHeader className="space-y-3">
+                    <CardTitle>{item.title}</CardTitle>
+                    <CardDescription className="text-sm leading-7">
+                      {item.description}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

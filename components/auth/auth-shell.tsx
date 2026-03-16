@@ -46,7 +46,7 @@ export function AuthShell({
         </div>
       </header>
 
-      <div className="mx-auto grid min-h-[calc(100vh-5.5rem)] w-full max-w-7xl items-center gap-10 px-6 py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(400px,0.95fr)] lg:px-8">
+      <div className="mx-auto grid min-h-[calc(100vh-5.5rem)] w-full max-w-7xl items-center gap-8 px-6 py-12 lg:grid-cols-[minmax(0,1.05fr)_auto_minmax(400px,0.95fr)] lg:px-8">
         <div className="space-y-8">
           <Badge className="rounded-full border-border/70 bg-background/70 px-4 py-1 text-[0.7rem] uppercase tracking-[0.28em] text-muted-foreground">
             {eyebrow}
@@ -93,13 +93,24 @@ export function AuthShell({
                     <p className="text-sm text-primary-foreground/80">
                       Workspace status
                     </p>
-                    <p className="mt-1 text-2xl font-semibold">Ready to onboard</p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      Ready to onboard
+                    </p>
                   </div>
                   <Sparkles className="size-5 text-primary-foreground/80" />
                 </div>
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="hidden h-full min-h-[520px] items-center justify-center lg:flex">
+          <div className="relative flex h-full items-center px-2">
+            <div className="h-full w-px bg-border/60" />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/70 bg-background px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Auth
+            </span>
+          </div>
         </div>
 
         <div className="w-full max-w-xl justify-self-stretch lg:justify-self-end">

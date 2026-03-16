@@ -9,7 +9,10 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <BrandLockup />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button asChild variant="ghost" className="rounded-full px-4">
+            <Link href="/pricing">Pricing</Link>
+          </Button>
           <Button asChild variant="ghost" className="rounded-full px-4">
             <Link href="/auth/sign-in">Sign in</Link>
           </Button>

@@ -46,19 +46,21 @@ export default async function DashboardPage() {
               </Button>
               <ThemeToggle />
               <SignOutButton />
-              <div className="flex min-w-[240px] items-center gap-3 rounded-full border border-border/60 bg-card px-3 py-2">
-                <Avatar className="size-10">
-                  <AvatarFallback>{initials ?? "EU"}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium leading-none">
-                    {session.user.name}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {session.user.email}
-                  </p>
+              <Link href="/profile">
+                <div className="flex min-w-[240px] items-center gap-3 rounded-full border border-border/60 bg-card px-3 py-2">
+                  <Avatar className="size-10">
+                    <AvatarFallback>{initials ?? "EU"}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium leading-none">
+                      {session.user.name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {session.user.email}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
 
