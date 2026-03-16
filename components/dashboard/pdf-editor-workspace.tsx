@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { degrees, PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import {
   Download,
@@ -122,7 +127,7 @@ function getDownloadName(fileName: string) {
 function getOverlayPixelPosition(
   coords: OverlayCoords,
   box: OverlayBox,
-  surface: OverlayBox
+  surface: OverlayBox,
 ) {
   return {
     left: coords.x * Math.max(surface.width - box.width, 0),
@@ -134,7 +139,7 @@ function toPdfCoordinates(
   coords: OverlayCoords,
   box: OverlayBox,
   pageWidth: number,
-  pageHeight: number
+  pageHeight: number,
 ) {
   const x = coords.x * Math.max(pageWidth - box.width, 0);
   const top = coords.y * Math.max(pageHeight - box.height, 0);
@@ -159,7 +164,9 @@ export function PdfEditorWorkspace() {
   const [originalPageCount, setOriginalPageCount] = useState(0);
   const [activePage, setActivePage] = useState(1);
   const [targetAllPages, setTargetAllPages] = useState(true);
-  const [originalPdfBytes, setOriginalPdfBytes] = useState<Uint8Array | null>(null);
+  const [originalPdfBytes, setOriginalPdfBytes] = useState<Uint8Array | null>(
+    null,
+  );
   const [editedPdfBytes, setEditedPdfBytes] = useState<Uint8Array | null>(null);
   const [overlayText, setOverlayText] = useState("Approved");
   const [fontSize, setFontSize] = useState(30);
@@ -172,10 +179,10 @@ export function PdfEditorWorkspace() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [imageScalePercent, setImageScalePercent] = useState(24);
   const [textPosition, setTextPosition] = useState<OverlayCoords>(
-    DEFAULT_TEXT_POSITION
+    DEFAULT_TEXT_POSITION,
   );
   const [imagePosition, setImagePosition] = useState<OverlayCoords>(
-    DEFAULT_IMAGE_POSITION
+    DEFAULT_IMAGE_POSITION,
   );
   const [surfaceSize, setSurfaceSize] = useState<OverlayBox>({
     width: 0,
@@ -251,7 +258,12 @@ export function PdfEditorWorkspace() {
       width: imageOverlayRef.current.offsetWidth,
       height: imageOverlayRef.current.offsetHeight,
     });
-  }, [imagePreviewUrl, imageScalePercent, surfaceSize.width, surfaceSize.height]);
+  }, [
+    imagePreviewUrl,
+    imageScalePercent,
+    surfaceSize.width,
+    surfaceSize.height,
+  ]);
 
   useEffect(() => {
     if (!editedPdfBytes || !canvasRef.current) {
@@ -275,7 +287,7 @@ export function PdfEditorWorkspace() {
         const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
         const workerUrl = new URL(
           "pdfjs-dist/build/pdf.worker.min.mjs",
-          import.meta.url
+          import.meta.url,
         ).toString();
 
         if (pdfjs.GlobalWorkerOptions.workerSrc !== workerUrl) {
@@ -300,9 +312,9 @@ export function PdfEditorWorkspace() {
             1,
             Math.min(
               PREVIEW_TARGET_WIDTH / baseViewport.width,
-              PREVIEW_TARGET_HEIGHT / baseViewport.height
-            )
-          )
+              PREVIEW_TARGET_HEIGHT / baseViewport.height,
+            ),
+          ),
         );
         const viewport = page.getViewport({ scale });
         const devicePixelRatio = window.devicePixelRatio || 1;
@@ -407,7 +419,7 @@ export function PdfEditorWorkspace() {
 
   async function mutatePdf(
     action: string,
-    mutate: (document: PDFDocument) => Promise<MutationResult | void>
+    mutate: (document: PDFDocument) => Promise<MutationResult | void>,
   ) {
     if (!editedPdfBytes) {
       setError("Upload a PDF before editing.");
@@ -459,7 +471,7 @@ export function PdfEditorWorkspace() {
           textPosition,
           { width: textWidth, height: textHeight },
           page.getWidth(),
-          page.getHeight()
+          page.getHeight(),
         );
 
         page.drawText(trimmedText, {
@@ -496,7 +508,7 @@ export function PdfEditorWorkspace() {
           imagePosition,
           { width, height },
           page.getWidth(),
-          page.getHeight()
+          page.getHeight(),
         );
 
         page.drawImage(image, {
@@ -570,7 +582,7 @@ export function PdfEditorWorkspace() {
     }
 
     const url = URL.createObjectURL(
-      new Blob([toArrayBuffer(editedPdfBytes)], { type: "application/pdf" })
+      new Blob([toArrayBuffer(editedPdfBytes)], { type: "application/pdf" }),
     );
     const link = document.createElement("a");
 
@@ -581,12 +593,16 @@ export function PdfEditorWorkspace() {
     pushActivity("Downloaded edited PDF");
   }
 
-  function beginDrag(target: DragTarget, event: ReactPointerEvent<HTMLDivElement>) {
+  function beginDrag(
+    target: DragTarget,
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) {
     if (!previewSurfaceRef.current) {
       return;
     }
 
-    const element = target === "text" ? textOverlayRef.current : imageOverlayRef.current;
+    const element =
+      target === "text" ? textOverlayRef.current : imageOverlayRef.current;
 
     if (!element) {
       return;
@@ -606,20 +622,20 @@ export function PdfEditorWorkspace() {
   const textPreviewPosition = getOverlayPixelPosition(
     textPosition,
     textBox,
-    surfaceSize
+    surfaceSize,
   );
   const imagePreviewPosition = getOverlayPixelPosition(
     imagePosition,
     imageBox,
-    surfaceSize
+    surfaceSize,
   );
   const imagePreviewWidth = Math.max(
     surfaceSize.width * (imageScalePercent / 100),
-    96
+    96,
   );
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+    <section className="grid gap-6">
       <Card className="border-border/60 bg-card/85 shadow-[0_30px_120px_-72px_rgba(0,0,0,0.85)]">
         <CardHeader className="gap-5 border-b border-border/60">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -849,8 +865,8 @@ export function PdfEditorWorkspace() {
                       setActivePage(
                         Math.min(
                           Math.max(Number(event.target.value) || 1, 1),
-                          pageCount || 1
-                        )
+                          pageCount || 1,
+                        ),
                       )
                     }
                   />
@@ -916,7 +932,9 @@ export function PdfEditorWorkspace() {
                       max={120}
                       value={fontSize}
                       onChange={(event) =>
-                        setFontSize(Math.max(10, Number(event.target.value) || 10))
+                        setFontSize(
+                          Math.max(10, Number(event.target.value) || 10),
+                        )
                       }
                       disabled={!editedPdfBytes}
                     />
@@ -950,7 +968,8 @@ export function PdfEditorWorkspace() {
                     Image overlay
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Long file names stay contained and the image guide is draggable.
+                    Long file names stay contained and the image guide is
+                    draggable.
                   </p>
                 </div>
                 <div className="space-y-2">
