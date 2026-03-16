@@ -152,6 +152,7 @@ export function PdfEditorWorkspace() {
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const previewFrameRef = useRef<HTMLDivElement | null>(null);
   const previewSurfaceRef = useRef<HTMLDivElement | null>(null);
   const textOverlayRef = useRef<HTMLDivElement | null>(null);
   const imageOverlayRef = useRef<HTMLDivElement | null>(null);
@@ -196,6 +197,7 @@ export function PdfEditorWorkspace() {
   ]);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [previewFrameWidth, setPreviewFrameWidth] = useState(0);
 
   useEffect(() => {
     return () => {
@@ -266,6 +268,27 @@ export function PdfEditorWorkspace() {
   ]);
 
   useEffect(() => {
+    if (!previewFrameRef.current) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const [entry] = entries;
+      if (!entry) {
+        return;
+      }
+
+      setPreviewFrameWidth(entry.contentRect.width);
+    });
+
+    observer.observe(previewFrameRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!editedPdfBytes || !canvasRef.current) {
       const canvas = canvasRef.current;
 
@@ -306,12 +329,16 @@ export function PdfEditorWorkspace() {
         }
 
         const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth =
+          previewFrameWidth > 0
+            ? Math.max(previewFrameWidth - 24, 300)
+            : PREVIEW_TARGET_WIDTH;
         const scale = Math.min(
           1.9,
           Math.max(
-            1,
+            0.45,
             Math.min(
-              PREVIEW_TARGET_WIDTH / baseViewport.width,
+              availableWidth / baseViewport.width,
               PREVIEW_TARGET_HEIGHT / baseViewport.height,
             ),
           ),
@@ -362,7 +389,7 @@ export function PdfEditorWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [editedPdfBytes, activePage]);
+  }, [editedPdfBytes, activePage, previewFrameWidth]);
 
   function pushActivity(action: string) {
     setActivity((current) => [createActivity(action), ...current].slice(0, 8));
@@ -711,8 +738,8 @@ export function PdfEditorWorkspace() {
           </div>
         </CardHeader>
 
-        <CardContent className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="space-y-4">
+        <CardContent className="grid gap-6 overflow-x-hidden p-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <Badge
                 className="max-w-[24rem] rounded-full bg-muted px-3 py-1 text-muted-foreground"
@@ -746,10 +773,13 @@ export function PdfEditorWorkspace() {
                 )}
               </div>
 
-              <div className="overflow-auto rounded-[1.5rem] border border-border/60 bg-zinc-950/5 p-3 dark:bg-white/5">
+              <div
+                ref={previewFrameRef}
+                className="overflow-x-auto overflow-y-hidden rounded-[1.5rem] border border-border/60 bg-zinc-950/5 p-3 dark:bg-white/5"
+              >
                 <div
                   ref={previewSurfaceRef}
-                  className="relative mx-auto min-h-[860px] min-w-[680px]"
+                  className="relative mx-auto min-h-[860px] w-full max-w-full"
                   style={{
                     width: surfaceSize.width || undefined,
                     height: surfaceSize.height || undefined,
@@ -833,7 +863,7 @@ export function PdfEditorWorkspace() {
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid h-fit gap-4 2xl:sticky 2xl:top-6">
             <div className="rounded-[1.5rem] border border-border/60 bg-background/70 p-4">
               <div className="grid gap-4">
                 <div className="space-y-2">

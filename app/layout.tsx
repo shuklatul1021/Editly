@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "Editly",
   description:
     "Professional PDF editing workspace for uploading, annotating, and exporting polished documents.",
+    icons : "./editly.ico"
 };
 
 export default function RootLayout({
