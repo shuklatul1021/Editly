@@ -63,12 +63,29 @@ type DragState = {
   boxHeight: number;
 };
 
+type ResizeState = {
+  target: DragTarget;
+  startX: number;
+  startY: number;
+  startValue: number;
+  surfaceWidth: number;
+  surfaceHeight: number;
+};
+
 const DEFAULT_TEXT_POSITION: OverlayCoords = { x: 0.62, y: 0.08 };
 const DEFAULT_IMAGE_POSITION: OverlayCoords = { x: 0.6, y: 0.24 };
 const PREVIEW_TARGET_WIDTH = 1040;
 const PREVIEW_TARGET_HEIGHT = 1380;
+const MIN_FONT_SIZE = 10;
+const MAX_FONT_SIZE = 120;
+const MIN_IMAGE_SCALE = 10;
+const MAX_IMAGE_SCALE = 60;
 
 function clamp(value: number, min = 0, max = 1) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function clampRange(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
@@ -157,6 +174,7 @@ export function PdfEditorWorkspace() {
   const textOverlayRef = useRef<HTMLDivElement | null>(null);
   const imageOverlayRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
+  const resizeStateRef = useRef<ResizeState | null>(null);
   const imagePreviewUrlRef = useRef<string | null>(null);
 
   const [pdfName, setPdfName] = useState("No file loaded");
@@ -210,9 +228,32 @@ export function PdfEditorWorkspace() {
   useEffect(() => {
     function stopDragging() {
       dragStateRef.current = null;
+      resizeStateRef.current = null;
     }
 
     function moveDragging(event: PointerEvent) {
+      const resizeState = resizeStateRef.current;
+
+      if (resizeState) {
+        const deltaX = event.clientX - resizeState.startX;
+        const deltaY = event.clientY - resizeState.startY;
+        const horizontalPercent = (deltaX / resizeState.surfaceWidth) * 100;
+        const verticalPercent = (deltaY / resizeState.surfaceHeight) * 100;
+        const deltaPercent = (horizontalPercent + verticalPercent) / 2;
+
+        if (resizeState.target === "image") {
+          const nextScale = resizeState.startValue + deltaPercent;
+          setImageScalePercent(
+            clampRange(nextScale, MIN_IMAGE_SCALE, MAX_IMAGE_SCALE),
+          );
+        } else {
+          const nextFontSize = resizeState.startValue + deltaPercent * 0.5;
+          setFontSize(clampRange(nextFontSize, MIN_FONT_SIZE, MAX_FONT_SIZE));
+        }
+
+        return;
+      }
+
       if (!dragStateRef.current || !previewSurfaceRef.current) {
         return;
       }
@@ -645,6 +686,58 @@ export function PdfEditorWorkspace() {
     };
   }
 
+  function beginImageResize(event: ReactPointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!previewSurfaceRef.current) {
+      return;
+    }
+
+    const surfaceWidth =
+      previewSurfaceRef.current.getBoundingClientRect().width;
+    const surfaceHeight =
+      previewSurfaceRef.current.getBoundingClientRect().height;
+    if (surfaceWidth <= 0 || surfaceHeight <= 0) {
+      return;
+    }
+
+    resizeStateRef.current = {
+      target: "image",
+      startX: event.clientX,
+      startY: event.clientY,
+      startValue: imageScalePercent,
+      surfaceWidth,
+      surfaceHeight,
+    };
+  }
+
+  function beginTextResize(event: ReactPointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!previewSurfaceRef.current) {
+      return;
+    }
+
+    const surfaceWidth =
+      previewSurfaceRef.current.getBoundingClientRect().width;
+    const surfaceHeight =
+      previewSurfaceRef.current.getBoundingClientRect().height;
+    if (surfaceWidth <= 0 || surfaceHeight <= 0) {
+      return;
+    }
+
+    resizeStateRef.current = {
+      target: "text",
+      startX: event.clientX,
+      startY: event.clientY,
+      startValue: fontSize,
+      surfaceWidth,
+      surfaceHeight,
+    };
+  }
+
   const trimmedText = overlayText.trim();
   const textPreviewPosition = getOverlayPixelPosition(
     textPosition,
@@ -798,7 +891,7 @@ export function PdfEditorWorkspace() {
                       role="button"
                       tabIndex={0}
                       onPointerDown={(event) => beginDrag("text", event)}
-                      className="absolute cursor-grab select-none rounded-2xl border border-dashed border-foreground/30 bg-background/80 px-4 py-2 shadow-md backdrop-blur active:cursor-grabbing"
+                      className="absolute cursor-grab select-none rounded-2xl border border-dashed border-foreground/30 bg-transparent px-4 py-2 shadow-md active:cursor-grabbing"
                       style={{
                         left: textPreviewPosition.left,
                         top: textPreviewPosition.top,
@@ -813,6 +906,16 @@ export function PdfEditorWorkspace() {
                       <div className="mt-1 font-semibold leading-none">
                         {trimmedText}
                       </div>
+                      <button
+                        type="button"
+                        onPointerDown={beginTextResize}
+                        aria-label="Resize text"
+                        className="absolute -bottom-3 -right-3 z-10 size-7 cursor-nwse-resize rounded-full border border-border bg-background shadow-sm"
+                      >
+                        <span className="block text-[10px] leading-none text-muted-foreground">
+                          ↘
+                        </span>
+                      </button>
                     </div>
                   ) : null}
 
@@ -839,6 +942,16 @@ export function PdfEditorWorkspace() {
                         alt="Overlay preview"
                         className="w-full rounded-xl object-contain"
                       />
+                      <button
+                        type="button"
+                        onPointerDown={beginImageResize}
+                        aria-label="Resize image"
+                        className="absolute -bottom-3 -right-3 z-10 size-7 cursor-nwse-resize rounded-full border border-border bg-background shadow-sm"
+                      >
+                        <span className="block text-[10px] leading-none text-muted-foreground">
+                          ↘
+                        </span>
+                      </button>
                     </div>
                   ) : null}
 
@@ -958,12 +1071,16 @@ export function PdfEditorWorkspace() {
                     <Input
                       id="font-size"
                       type="number"
-                      min={10}
-                      max={120}
+                      min={MIN_FONT_SIZE}
+                      max={MAX_FONT_SIZE}
                       value={fontSize}
                       onChange={(event) =>
                         setFontSize(
-                          Math.max(10, Number(event.target.value) || 10),
+                          clampRange(
+                            Number(event.target.value) || MIN_FONT_SIZE,
+                            MIN_FONT_SIZE,
+                            MAX_FONT_SIZE,
+                          ),
                         )
                       }
                       disabled={!editedPdfBytes}
@@ -1012,11 +1129,17 @@ export function PdfEditorWorkspace() {
                   <input
                     id="image-scale"
                     type="range"
-                    min={10}
-                    max={60}
+                    min={MIN_IMAGE_SCALE}
+                    max={MAX_IMAGE_SCALE}
                     value={imageScalePercent}
                     onChange={(event) =>
-                      setImageScalePercent(Number(event.target.value))
+                      setImageScalePercent(
+                        clampRange(
+                          Number(event.target.value),
+                          MIN_IMAGE_SCALE,
+                          MAX_IMAGE_SCALE,
+                        ),
+                      )
                     }
                     disabled={!editedPdfBytes}
                     className="w-full accent-foreground"
